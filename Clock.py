@@ -1,8 +1,7 @@
 import customtkinter as ctk
-from tkinter import colorchooser, Menu, simpledialog, filedialog
+from tkinter import colorchooser, Menu, simpledialog, filedialog, messagebox
 from tkinter import font as tkfont
 from PIL import Image, ImageTk
-import time
 from datetime import datetime
 
 
@@ -17,7 +16,7 @@ class FlipClockApp:
         self.theme = "dark"
         self.time_color = "white"
         self.date_color = "grey"
-        self.time_font_size = 80
+        self.time_font_size = 300
         self.date_font_size = 20
         self.time_font = "Helvetica"
         self.date_font = "Helvetica"
@@ -50,11 +49,24 @@ class FlipClockApp:
         )
         self.date_label.place(relx=0.5, rely=0.6, anchor="center")
 
+        # Developer label
+        self.developer_label = ctk.CTkLabel(
+            root,
+            text="Developer: Pushkarjay Ajay",
+            font=("Helvetica", 12),
+            text_color="white",
+        )
+        self.developer_label.place(relx=0.95, rely=0.02, anchor="ne")
+        self.developer_label.bind("<Button-1>", self.show_developer_info)
+
         # Add menu
         self.create_menu()
 
         # Update clock
         self.update_clock()
+
+        # Bind the Esc key to exit fullscreen
+        self.root.bind("<Escape>", self.exit_fullscreen)
 
     def create_menu(self):
         menu_bar = Menu(self.root)
@@ -110,6 +122,20 @@ class FlipClockApp:
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
         self.root.attributes("-fullscreen", self.fullscreen)
+
+        if self.fullscreen:
+            self.developer_label.place_forget()  # Hide developer label
+            self.root.config(menu=None)  # Hide menu
+        else:
+            self.developer_label.place(relx=0.95, rely=0.02, anchor="ne")  # Show developer label
+            self.create_menu()  # Recreate menu
+
+    def exit_fullscreen(self, event=None):
+        if self.fullscreen:
+            self.toggle_fullscreen()  # Toggle fullscreen off
+
+    def show_developer_info(self, event):
+        messagebox.showinfo("Developer Info", "Email: pushkarjay.ajay1@gmail.com\nLinkedIn: www.linkedin.com/in/pushkarjay")
 
     def change_time_color(self):
         color = colorchooser.askcolor(title="Choose Time Color")[1]
