@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import colorchooser, Menu
+from tkinter import colorchooser, Menu, simpledialog
 import time
 from datetime import datetime
 
@@ -43,10 +43,9 @@ class FlipClockApp:
         settings_menu.add_command(label="Change Time Color", command=self.change_time_color)
         settings_menu.add_command(label="Change Date Color", command=self.change_date_color)
         settings_menu.add_separator()
-        settings_menu.add_command(label="Increase Time Font Size", command=lambda: self.adjust_font("time", "increase"))
-        settings_menu.add_command(label="Decrease Time Font Size", command=lambda: self.adjust_font("time", "decrease"))
-        settings_menu.add_command(label="Increase Date Font Size", command=lambda: self.adjust_font("date", "increase"))
-        settings_menu.add_command(label="Decrease Date Font Size", command=lambda: self.adjust_font("date", "decrease"))
+        settings_menu.add_command(label="Set Time Font Size", command=lambda: self.set_font_size("time"))
+        settings_menu.add_command(label="Set Date Font Size", command=lambda: self.set_font_size("date"))
+        settings_menu.add_command(label="Fit Window to Content", command=self.fit_window_to_content)
         menu_bar.add_cascade(label="Settings", menu=settings_menu)
 
         # Theme Menu
@@ -54,6 +53,11 @@ class FlipClockApp:
         theme_menu.add_command(label="Dark Theme", command=lambda: self.change_theme("dark"))
         theme_menu.add_command(label="Light Theme", command=lambda: self.change_theme("light"))
         menu_bar.add_cascade(label="Theme", menu=theme_menu)
+
+        # Defaults Menu
+        defaults_menu = Menu(menu_bar, tearoff=0)
+        defaults_menu.add_command(label="Reset to Defaults", command=self.reset_to_defaults)
+        menu_bar.add_cascade(label="Defaults", menu=defaults_menu)
 
     def toggle_fullscreen(self):
         self.fullscreen = not self.fullscreen
@@ -71,19 +75,20 @@ class FlipClockApp:
             self.date_color = color
             self.date_label.configure(text_color=self.date_color)
 
-    def adjust_font(self, label, action):
-        if label == "time":
-            if action == "increase":
-                self.time_font_size += 5
-            elif action == "decrease" and self.time_font_size > 20:
-                self.time_font_size -= 5
-            self.time_label.configure(font=("Helvetica", self.time_font_size, "bold"))
-        elif label == "date":
-            if action == "increase":
-                self.date_font_size += 2
-            elif action == "decrease" and self.date_font_size > 10:
-                self.date_font_size -= 2
-            self.date_label.configure(font=("Helvetica", self.date_font_size))
+    def set_font_size(self, label):
+        font_size = simpledialog.askinteger("Set Font Size", f"Enter font size for {label}:")
+        if font_size and font_size > 0:
+            if label == "time":
+                self.time_font_size = font_size
+                self.time_label.configure(font=("Helvetica", self.time_font_size, "bold"))
+            elif label == "date":
+                self.date_font_size = font_size
+                self.date_label.configure(font=("Helvetica", self.date_font_size))
+
+    def fit_window_to_content(self):
+        # Resize window to fit content dynamically
+        self.root.update_idletasks()
+        self.root.geometry(f"{self.time_font_size * 10}x{self.date_font_size * 10}")
 
     def change_theme(self, theme):
         self.theme = theme
@@ -94,7 +99,19 @@ class FlipClockApp:
         elif theme == "light":
             ctk.set_appearance_mode("light")
             self.time_label.configure(text_color=self.time_color or "black")
-            self.date_label.configure(text_color=self.date_color or "black")
+            self.date_label.configure(text_color=self.date_color or "dimgray")
+
+    def reset_to_defaults(self):
+        # Reset all settings to defaults
+        self.time_font_size = 80
+        self.date_font_size = 20
+        self.time_color = "white"
+        self.date_color = "grey"
+        self.theme = "dark"
+        self.root.geometry("800x500")
+        self.time_label.configure(font=("Helvetica", self.time_font_size, "bold"), text_color=self.time_color)
+        self.date_label.configure(font=("Helvetica", self.date_font_size), text_color=self.date_color)
+        self.change_theme("dark")
 
     def update_clock(self):
         current_time = time.strftime("%H:%M:%S")  # Hour:Minute:Second
